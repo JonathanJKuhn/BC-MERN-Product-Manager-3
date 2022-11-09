@@ -1,33 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button, Col, Row, Form, Container } from "react-bootstrap";
 import axios from "axios";
 
-const ProductForm = (props) => {
-  const [title, setTitle] = useState("");
+const Update = (props) => {
+  const { id } = useParams();
+  const [title, setTitle] = useState();
   const [price, setPrice] = useState();
-  const [description, setDescription] = useState("");
-  const { products, setProducts } = props;
+  const [description, setDescription] = useState();
+  const navigate = useNavigate();
 
-  const handleOnSubmit = (e) => {
+  useEffect(() => {
+    axios
+      .get(`http://localhost:8000/api/product/${id}`)
+      .then((res) => {
+        setTitle(res.data.title);
+        setPrice(res.data.price);
+        setDescription(res.data.description);
+      })
+      .catch((err) => console.log(err));
+  }, [id]);
+
+  const updateProduct = (e) => {
     e.preventDefault();
     axios
-      .post("http://localhost:8000/api/product", {
+      .put(`http://localhost:8000/api/product/${id}`, {
         title,
         price,
         description,
       })
       .then((res) => {
-        setProducts([...products, res.data]);
-        setTitle("");
-        setPrice(0);
-        setDescription("");
+        console.log(res);
+        navigate("/");
       })
       .catch((err) => console.log(err));
   };
+
+  const deleteProduct = (productId) => {
+    axios
+      .delete(`http://localhost:8000/api/product/${productId}`)
+      .then(() => {
+        navigate("/");
+      })
+      .catch((err) => console.log(err));
+  };
+
   return (
     <Container>
-      <h2 className="display-6 mb-3">Product Manager</h2>
-      <Form onSubmit={handleOnSubmit}>
+      <h2 className="display-6 mb-3">Update a Product</h2>
+      <Form onSubmit={updateProduct}>
         <Form.Group as={Row} className="mb-3" controlId="formTitle">
           <Form.Label column sm={{ span: 1, offset: 3 }}>
             Title
@@ -66,8 +87,13 @@ const ProductForm = (props) => {
           </Col>
         </Form.Group>
         <Form.Group as={Row} className="mb-3">
-          <Col sm={{ span: 10, offset: 1 }}>
-            <Button type="submit">Create</Button>
+          <Col sm={{ span: 2, offset: 4 }} className="mb-3">
+            <Button type="submit">Update</Button>
+          </Col>
+          <Col sm={{ span: 1, offset: 0 }} className="mb-3">
+            <Button variant="danger" onClick={() => deleteProduct(id)}>
+              Delete
+            </Button>
           </Col>
         </Form.Group>
       </Form>
@@ -75,4 +101,4 @@ const ProductForm = (props) => {
   );
 };
 
-export default ProductForm;
+export default Update;
